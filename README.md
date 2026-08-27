@@ -191,3 +191,14 @@ Element Plus `el-input`은 한글 조합 중에는 `input`/`update:modelValue` �
 Vercel의 기본 Node.js 서버리스 함수는 응답을 스트리밍하지 않고 완료된 뒤 한 번에 반환합니다.
 → `api/chat.js`를 Edge Runtime(`export const config = { runtime: 'edge' }`)으로 전환해서
 실시간 타이핑 효과가 배포 환경에서도 동일하게 동작하도록 수정.
+
+### 11. Edge Runtime에서 openai SDK가 배포 자체를 실패시키던 문제
+위 10번대로 Edge Runtime으로 바꾸고 나니, 이번엔 Vercel 배포 자체가
+`The Edge Function "api/chat" is referencing unsupported modules: - openai: #x509-transport-state`
+에러로 실패했습니다. `openai` npm SDK가 내부적으로 Edge Runtime이 지원하지 않는
+Node 전용 모듈(TLS 관련)을 참조하고 있었던 게 원인입니다.
+→ SDK를 걷어내고, OpenAI REST API(`/v1/chat/completions`)를 `fetch`로 직접 호출한 뒤
+응답으로 오는 SSE(Server-Sent Events) 스트림(`data: {...}\n\n`)을 직접 파싱해서
+`delta.content`만 뽑아 내보내는 방식으로 교체. `fetch`/`ReadableStream`/`TextDecoder`는
+전부 Edge Runtime이 지원하는 표준 웹 API라 이 문제를 완전히 피할 수 있었습니다.
+(로컬 dev용 `server/index.js`는 일반 Node 프로세스라 SDK를 그대로 써도 문제없음)
