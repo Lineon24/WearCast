@@ -10,10 +10,7 @@ const goHome = () => {
 <template>
     <div class="practice-section page-pad">
         <div class="notfound-card">
-            <div class="notfound-icons">
-                <span class="icon-sun">🌤️</span>
-                <span class="icon-question">❓</span>
-            </div>
+            <img src="/favicon.svg" alt="" class="notfound-logo" />
             <h2 class="notfound-title">페이지를 찾을 수 없습니다.</h2>
             <p class="notfound-desc">
                 요청하신 주소가 존재하지 않거나,<br />
@@ -35,13 +32,13 @@ const goHome = () => {
     box-shadow: var(--wx-shadow);
 }
 
-.notfound-icons {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    font-size: clamp(36px, 8vw, 48px);
-    margin-bottom: 20px;
+.notfound-logo {
+    display: block;
+    width: clamp(72px, 16vw, 96px);
+    height: clamp(72px, 16vw, 96px);
+    margin: 0 auto 20px;
+    border-radius: var(--wx-radius-md);
+    box-shadow: var(--wx-shadow);
 }
 
 .notfound-title {

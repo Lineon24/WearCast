@@ -85,8 +85,20 @@ const selectCard = (city) => {
   favoritesStore.toggleFavorite(city.id)
 }
 
+// ✨ 기능 [v0.0.9]: 즐겨찾기한 카드를 맨 위로, 그다음은 최근에 추가한 지역이 위로 오도록 정렬한다.
+// 기본 제공 지역은 추가 시각이 없어서(addedAt undefined → 0) 가장 오래된 취급으로 밀려나되,
+// 서로간의 순서(서울→수원→...)는 그대로 유지된다(Array#sort는 안정 정렬이라 동점이면 원래 순서 유지).
+const sortedWeatherList = computed(() =>
+  [...weatherList.value].sort((a, b) => {
+    const favA = favoritesStore.isFavoriteCity(a.id) ? 1 : 0
+    const favB = favoritesStore.isFavoriteCity(b.id) ? 1 : 0
+    if (favA !== favB) return favB - favA
+    return (b.addedAt ?? 0) - (a.addedAt ?? 0)
+  }),
+)
+
 const filteredWeatherList = computed(() =>
-  weatherList.value.filter((item) => item.name.includes(searchQuery.value)),
+  sortedWeatherList.value.filter((item) => item.name.includes(searchQuery.value)),
 )
 
 const resultCount = computed(() => filteredWeatherList.value.length)
@@ -132,11 +144,11 @@ watchEffect(() => {
   <div class="practice-section page-pad">
     <!-- 도시 검색 박스 -->
     <AddCityBar />
-    <BaseDashboardCard icon="🔍" title="내 지역 카드 검색">
+    <BaseDashboardCard icon="Search" title="내 지역 카드 검색">
       <SearchBar :search-Query="searchQuery" @update-query="handleSearchQuery" />
     </BaseDashboardCard>
 
-    <BaseDashboardCard icon="📍" title="지역별 날씨 현황">
+    <BaseDashboardCard icon="LocationFilled" title="지역별 날씨 현황">
       <div v-if="isLoading" class="loading-text">
         <el-icon class="is-loading"><Loading /></el-icon> 날씨 정보를 불러오는 중...
       </div>

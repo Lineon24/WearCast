@@ -18,7 +18,7 @@ const navItems = [
     <header class="app-header-bar">
         <div class="practice-section app-header-inner">
             <RouterLink to="/" class="brand">
-                <span class="brand-mark">☀️</span>
+                <img src="/favicon.svg" class="brand-mark" alt="" width="24" height="24" />
                 <span class="brand-text">WearCast</span>
             </RouterLink>
 
@@ -77,8 +77,9 @@ const navItems = [
     flex-shrink: 0;
 }
 .brand-mark {
-    font-size: 22px;
-    line-height: 1;
+    width: 24px;
+    height: 24px;
+    display: block;
 }
 .brand-text {
     font-size: 15px;

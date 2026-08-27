@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="10%" y1="0%" x2="90%" y2="100%">
+      <stop offset="0%" stop-color="#7C8EEC"/>
+      <stop offset="100%" stop-color="#4F5FC4"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="34%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#FFDD8A"/>
+      <stop offset="100%" stop-color="#F5A623"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+
+  <!-- 해 (뒤쪽, 구름 뒤에서 살짝 비치는 느낌) - 노출된 위쪽/오른쪽 방향으로 광선 3개를 동일한
+       길이·간격(중심에서 45도 간격, 원 가장자리에서 3px 띄움)으로 배치 -->
+  <g stroke="#FFFFFF" stroke-width="4" stroke-linecap="round">
+    <line x1="41" y1="11" x2="41" y2="5"/>
+    <line x1="50.9" y1="15.1" x2="55.1" y2="10.9"/>
+    <line x1="55" y1="25" x2="61" y2="25"/>
+  </g>
+  <circle cx="41" cy="25" r="11" fill="url(#sun)"/>
+
+  <!-- 구름 (앞쪽) -->
+  <g fill="#FFFFFF">
+    <circle cx="21" cy="39" r="8.5"/>
+    <circle cx="30" cy="33.5" r="10.5"/>
+    <circle cx="38" cy="40" r="7"/>
+    <rect x="14" y="38" width="32" height="12" rx="6"/>
+  </g>
+
+  <!-- AI 스파클 -->
+  <path d="M13 10 L14.6 14.4 L19 16 L14.6 17.6 L13 22 L11.4 17.6 L7 16 L11.4 14.4 Z" fill="#FFFFFF"/>
+</svg>

@@ -182,7 +182,7 @@ const dailyForecast = computed(() => {
                 </div>
             </div>
 
-            <BaseDashboardCard v-if="uvIndex !== null" icon="🧴" title="자외선 / 강수확률">
+            <BaseDashboardCard v-if="uvIndex !== null" icon="Sunny" title="자외선 / 강수확률">
                 <div class="gauge-row">
                     <div class="gauge-box">
                         <div class="gauge-wrap">
@@ -217,7 +217,7 @@ const dailyForecast = computed(() => {
                 />
             </BaseDashboardCard>
 
-            <BaseDashboardCard v-if="hourlyForecast.length" icon="⏱️" title="24시간 예보 (3시간 단위)">
+            <BaseDashboardCard v-if="hourlyForecast.length" icon="Clock" title="24시간 예보 (3시간 단위)">
                 <div class="forecast-list">
                     <div v-for="item in hourlyForecast" :key="item.time" class="forecast-item">
                         <div class="forecast-time">{{ item.time }}</div>
@@ -230,7 +230,7 @@ const dailyForecast = computed(() => {
                 </div>
             </BaseDashboardCard>
 
-            <BaseDashboardCard v-if="dailyForecast.length" icon="📅" title="5일 예보">
+            <BaseDashboardCard v-if="dailyForecast.length" icon="Calendar" title="5일 예보">
                 <div class="forecast-list">
                     <div v-for="day in dailyForecast" :key="day.date" class="forecast-item">
                         <div class="forecast-time">{{ formatWeekday(day.date) }}요일</div>

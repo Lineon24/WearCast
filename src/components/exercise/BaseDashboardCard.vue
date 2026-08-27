@@ -3,12 +3,20 @@ defineProps({
   icon: { type: String, default: '' },
   title: { type: String, required: true },
 })
+
+// icon이 "Search"처럼 PascalCase 문자열이면 전역 등록된 Element Plus 벡터 아이콘 컴포넌트로 렌더링하고,
+// 그 외(이모지 등 기존 값)는 예전처럼 텍스트 그대로 보여준다 - 호출부를 한 번에 다 안 고쳐도 되도록
+// 두 방식을 함께 지원한다.
+const isIconComponent = (value) => /^[A-Z][A-Za-z]*$/.test(value)
 </script>
 
 <template>
   <section class="dashboard-card">
     <h3 class="dashboard-card__title">
-      <span v-if="icon" class="dashboard-card__icon">{{ icon }}</span>
+      <span v-if="icon" class="dashboard-card__icon">
+        <el-icon v-if="isIconComponent(icon)"><component :is="icon" /></el-icon>
+        <template v-else>{{ icon }}</template>
+      </span>
       {{ title }}
     </h3>
     <div class="dashboard-card__body">

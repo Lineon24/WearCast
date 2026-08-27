@@ -139,11 +139,31 @@ const buildRegionLabel = (place) => {
     return parts.filter(Boolean).join(' ')
 }
 
+// 🛠️ 트러블슈팅 [v0.0.8]: "안산"으로 검색하면 한국 경기도 안산시가 아니라 중국 랴오닝성
+// 안산시(鞍山, 한자 발음이 같아서 local_names.ko도 우연히 똑같이 "안산시")가 뜨는 경우가 있었다.
+// OpenWeatherMap 지오코딩이 이름 일치보다 자체 순위(인구 등으로 추정)를 우선하다 보니
+// limit:1만 요청하면 엉뚱한 도시가 걸릴 수 있었다. country=KR로 필터링해도 "안산" 검색에
+// 관련 없는 "양산시"가 먼저 나오는 경우까지 있어서, 국가 필터만으로는 부족했다.
+// 그래서 후보를 여러 개(limit 10) 받아온 뒤, 검색어와 이름이 실제로 일치하는 후보만 추리고,
+// 그중에서도 한국(KR)을 우선하도록 골라내는 방식으로 바꿨다.
+const pickBestMatch = (candidates, query) => {
+    const trimmedQuery = query.trim()
+    const normalizedQuery = trimmedQuery.toLowerCase()
+    const matchesQuery = (place) => {
+        // 한국 지명은 API가 "안산시"처럼 "시/군/구"를 붙여 내려주므로, 접두어 일치로 비교한다
+        if (place.local_names?.ko?.startsWith(trimmedQuery)) return true
+        return place.name.toLowerCase() === normalizedQuery
+    }
+
+    const nameMatches = candidates.filter(matchesQuery)
+    return nameMatches.find((place) => place.country === 'KR') || nameMatches[0] || candidates[0]
+}
+
 // 도시 이름 → 좌표 (수동 검색용)
 export const searchCityByName = async (cityName) => {
-    const data = await fetchFromWeatherProxy('geo-direct', { q: cityName, limit: 1 })
+    const data = await fetchFromWeatherProxy('geo-direct', { q: cityName, limit: 10 })
     if (!data.length) return null
-    const place = data[0]
+    const place = pickBestMatch(data, cityName)
     return {
         name: place.local_names?.ko || place.name,
         lat: place.lat,

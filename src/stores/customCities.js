@@ -80,7 +80,15 @@ export const useCustomCitiesStore = defineStore('customCities', () => {
         }
         const id = `custom_${city.lat.toFixed(2)}_${city.lon.toFixed(2)}`
         // region이 따로 없으면(예: 예전 호출부) name으로 대체
-        cities.value.push({ id, name: city.name, region: city.region || city.name, lat: city.lat, lon: city.lon })
+        // ✨ 기능 [v0.0.9]: addedAt은 "최근 추가한 지역이 위로" 정렬에 쓰는 추가 시각 (WeatherHomeView.vue)
+        cities.value.push({
+            id,
+            name: city.name,
+            region: city.region || city.name,
+            lat: city.lat,
+            lon: city.lon,
+            addedAt: Date.now(),
+        })
         return { added: true }
     }
 

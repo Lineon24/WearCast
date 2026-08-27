@@ -88,7 +88,7 @@ const handleDetectLocation = async () => {
       <div class="add-city-actions">
         <el-button type="primary" round :loading="isLoading" @click="handleSearch">추가</el-button>
         <el-button class="location-btn" round :disabled="isLoading" @click="handleDetectLocation">
-          📍 내 위치
+          <el-icon><Aim /></el-icon>&nbsp;내 위치
         </el-button>
       </div>
     </div>
