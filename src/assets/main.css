@@ -1,0 +1,48 @@
+@import './base.css';
+
+/* Element Plus 테마를 WearCast 팔레트로 재정의 (element-plus CSS보다 뒤에 로드되어야 함) */
+:root {
+  --el-color-primary: var(--wx-primary);
+  --el-color-primary-light-3: #9aa8ef;
+  --el-color-primary-light-5: #b7c1f4;
+  --el-color-primary-light-7: #d4daf8;
+  --el-color-primary-light-8: #e2e6fa;
+  --el-color-primary-light-9: #f1f3fd;
+  --el-color-primary-dark-2: var(--wx-primary-dark);
+
+  --el-color-danger: var(--wx-danger);
+  --el-color-warning: var(--wx-warm);
+  --el-color-success: var(--wx-success);
+
+  --el-border-radius-base: 10px;
+  --el-border-radius-small: 8px;
+  --el-border-radius-round: var(--wx-radius-pill);
+
+  --el-font-family: inherit;
+  --el-text-color-primary: var(--wx-text);
+  /* 🛠️ 트러블슈팅: --el-text-color-regular를 흐린 회색(--wx-text-soft)으로 뒀더니,
+     이 변수를 el-input이 "타이핑한 글자 색"으로도 그대로 쓰고 있어서 검색창/입력창에
+     친 글자가 다 흐릿하게 보이는 버그가 있었다. 진한 색(--wx-text)으로 바꾸고,
+     --el-input-text-color도 따로 한 번 더 명시해서 확실히 검은 글자로 보이게 고쳤다. */
+  --el-text-color-regular: var(--wx-text);
+  --el-border-color: var(--wx-border);
+  --el-border-color-light: var(--wx-border);
+  --el-fill-color-blank: var(--wx-surface);
+  --el-input-text-color: var(--wx-text);
+  --el-input-placeholder-color: var(--wx-text-faint);
+}
+
+#app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-weight: normal;
+}
+
+/* 모든 페이지가 공유하는 반응형 컨테이너 - 모바일에선 꽉 차게, 데스크톱에선 최대 폭으로 중앙 정렬 */
+.practice-section {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 var(--wx-gutter) clamp(24px, 6vw, 40px);
+  font-family: inherit;
+}

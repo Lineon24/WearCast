@@ -1,0 +1,74 @@
+/* WearCast - 디자인 토큰 (라벤더/페리윙클 블루 톤) */
+:root {
+  --wx-primary: #6f83e8;
+  --wx-primary-dark: #4f5fc4;
+  --wx-primary-light: #eef0fb;
+  --wx-bg: #eef0f7;
+  --wx-surface: #ffffff;
+  --wx-text: #262a41;
+  --wx-text-soft: #8b8fa3;
+  --wx-text-faint: #b2b6c8;
+  --wx-border: #e7e9f3;
+  --wx-warm: #f5a623;
+  --wx-cool: #4fa3d1;
+  --wx-danger: #ef6a6a;
+  --wx-success: #58c48a;
+
+  --wx-radius-lg: 24px;
+  --wx-radius-md: 16px;
+  --wx-radius-sm: 10px;
+  --wx-radius-pill: 999px;
+
+  --wx-shadow: 0 10px 30px rgba(76, 90, 160, 0.12);
+  --wx-shadow-sm: 0 4px 14px rgba(76, 90, 160, 0.08);
+
+  --wx-gutter: clamp(14px, 4vw, 24px);
+}
+
+/* semantic aliases used by the pre-existing Vue scaffold styles */
+:root {
+  --color-background: var(--wx-bg);
+  --color-background-soft: var(--wx-surface);
+  --color-background-mute: var(--wx-primary-light);
+
+  --color-border: var(--wx-border);
+  --color-border-hover: var(--wx-primary);
+
+  --color-heading: var(--wx-text);
+  --color-text: var(--wx-text);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--wx-text);
+  background: var(--wx-bg);
+  line-height: 1.6;
+  font-family:
+    'Pretendard Variable',
+    Pretendard,
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Apple SD Gothic Neo',
+    'Malgun Gothic',
+    sans-serif;
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
