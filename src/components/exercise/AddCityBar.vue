@@ -52,7 +52,7 @@ const handleDetectLocation = async () => {
     const { lat, lon } = await getCurrentPosition()
     const place = await reverseGeocode(lat, lon)
     const cityName = place?.name || '내 위치'
-    const result = customCitiesStore.addCity({ name: cityName, lat, lon })
+    const result = customCitiesStore.addCity({ name: cityName, region: place?.region, lat, lon })
     if (!result.added) {
       ElMessage.warning(`'${cityName}'은(는) 이미 목록에 있는 도시입니다.`)
     } else {

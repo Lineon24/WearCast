@@ -58,12 +58,15 @@
 ```
 skala-vue/
 ├── api/
-│   └── chat.js               # Vercel 서버리스 함수 (Edge Runtime) - 배포 시 챗봇 API 프록시
+│   ├── _lib/
+│   │   └── weatherProxy.js    # 날씨 프록시 공용 핸들러 (Vercel 함수·Express 서버가 같이 씀)
+│   ├── weather.js             # Vercel 서버리스 함수 (Node 런타임) - 배포 시 날씨 API 프록시
+│   └── chat.js                # Vercel 서버리스 함수 (Edge Runtime) - 배포 시 챗봇 API 프록시
 ├── server/
-│   └── index.js               # Express 서버 - 로컬 개발 시 챗봇 API 프록시 (vite dev와 함께 실행)
+│   └── index.js               # Express 서버 - 로컬 개발 시 날씨/챗봇 API 프록시 (vite dev와 함께 실행)
 ├── src/
 │   ├── api/
-│   │   ├── weather.js          # OpenWeatherMap / Open-Meteo / GPS 관련 API 함수 모음
+│   │   ├── weather.js          # 날씨 프록시(/api/weather) + Open-Meteo + GPS 호출 함수 모음
 │   │   └── chat.js             # 챗봇 프롬프트 생성 + 스트리밍 응답 요청 함수
 │   ├── assets/
 │   │   ├── base.css            # 디자인 토큰(색상/라운드/그림자 등 CSS 변수)
@@ -110,7 +113,7 @@ npm run dev                  # 프런트엔드(5173) + 백엔드 프록시(8787)
 
 ```bash
 OPENAI_API_KEY=sk-proj-...          # 챗봇용, 서버 전용(클라이언트에 노출 안 됨)
-VITE_OPENWEATHER_API_KEY=...        # 날씨 데이터용
+OPENWEATHER_API_KEY=...             # 날씨 데이터용, 서버 전용(클라이언트에 노출 안 됨)
 SERVER_PORT=8787                    # 선택, 로컬 프록시 서버 포트
 ```
 
@@ -123,8 +126,9 @@ npm run preview # 빌드 결과 로컬에서 미리보기
 ## 배포 (Vercel)
 
 1. GitHub에 저장소를 올린 뒤 Vercel에서 Import
-2. Vercel 프로젝트 Settings → Environment Variables에 `OPENAI_API_KEY`, `VITE_OPENWEATHER_API_KEY` 등록
-3. 배포 (Vite 프레임워크 자동 감지, `api/chat.js`는 Vercel이 자동으로 서버리스 함수로 인식)
+2. Vercel 프로젝트 Settings → Environment Variables에 `OPENAI_API_KEY`, `OPENWEATHER_API_KEY` 등록
+   (둘 다 `VITE_` 접두사가 없는 서버 전용 값이라 Type을 Secret으로 둘 수 있습니다)
+3. 배포 (Vite 프레임워크 자동 감지, `api/chat.js`·`api/weather.js`는 Vercel이 자동으로 서버리스 함수로 인식)
 
 ## 버전별 히스토리 & 트러블슈팅
 
@@ -293,3 +297,44 @@ http로 나가는 요청은 브라우저가 **mixed content**로 판단해 차�
 > 배웠습니다. 같은 종류의 버그(반올림/경계값)가 프로젝트 곳곳에서 반복될 수 있다는 것도
 > 새삼 느꼈고, 앞으로 위치·시간처럼 "연속적인 값"을 비교하는 코드를 짤 땐 경계값을 한 번씩
 > 의심해보는 습관을 들이기로 했습니다.
+
+### 🏷️ v0.0.5 — 지역 라벨 구분 개선
+
+#### 16. 카드 이름은 같은데 날씨가 다르게 나와 헷갈리던 문제
+14/15번 문제를 고치고 나서도, "이름은 같은데 날씨는 다른" 카드 자체는 남을 수 있었습니다.
+기본 제공 "서울" 카드는 고정된 대표 좌표를, 📍 내 위치로 추가한 "서울" 카드는 실제 GPS 좌표를
+쓰기 때문에 이름은 같아도 실제 조회 지점이 달라 기온/습도 등이 다르게 나오는 게 정상 동작인데,
+카드에는 `name`만 보여주고 있어서 사용자 입장에서는 왜 다른지 구분할 방법이 없었습니다.
+→ 지오코딩 응답의 국가/시도(`state`)/지명 정보를 조합해 `region` 라벨을 만들고, 카드 이름 아래
+작은 글씨로 함께 표시하도록 수정(`WeatherCard.vue`). OpenWeatherMap의 역지오코딩은 한국 주소를
+구/동 단위까지 안정적으로 보장하진 않지만(좌표에 따라 시 단위로만 잡히기도 함), 있는 정보만큼은
+최대한 보여주도록 개선했습니다. (동 단위까지 정확하게 뽑으려면 카카오/네이버 로컬 API 같은
+한국 주소 특화 서비스가 추가로 필요하다고 판단해, 이번엔 새 API 키 없이 기존 정보로 개선하는
+쪽을 선택했습니다.)
+> 💡 **느낀점/배운점**: "버그를 고쳤다"와 "사용자가 왜 이렇게 동작하는지 이해할 수 있다"는
+> 다른 문제라는 걸 배웠습니다. 로직상 정상 동작이어도 화면에 그 이유를 설명할 단서가 없으면
+> 사용자에겐 여전히 버그처럼 보입니다. 또, 모든 걸 완벽하게 해결하려고 새 API를 추가하기보다,
+> 이미 가진 데이터로 "일단 얼마나 개선되는지" 먼저 시도해보는 것도 실용적인 선택이라는 걸
+> 느꼈습니다.
+
+### 🏷️ v0.0.6 — 날씨 API 키 백엔드 프록시 전환
+
+#### 17. OpenWeatherMap 키가 여전히 브라우저에 노출되던 문제
+Vercel에 `VITE_OPENWEATHER_API_KEY`를 환경변수로 등록하려는데 "Environment variables with a
+public framework prefix cannot use `visibility: secret`"라는 에러가 떴습니다. `VITE_` 접두사가
+붙은 값은 Vite가 빌드 시 그대로 브라우저 번들에 넣는 "공개용" 값이라 Vercel이 애초에 Secret으로
+가려주지 않는 게 정상 동작이었고, 이 키는 처음부터 프런트엔드가 OpenWeatherMap을 직접 호출하는
+구조라 브라우저 네트워크 탭에서도 그대로 보이고 있었습니다.
+→ 챗봇(`api/chat.js`)과 동일한 방식으로 백엔드 프록시를 새로 만들었습니다. 날씨/대기질/예보/
+지오코딩 요청 로직을 `api/_lib/weatherProxy.js` 공용 핸들러로 옮기고, `api/weather.js`(Vercel
+서버리스 함수)와 `server/index.js`(로컬 Express)가 이 핸들러 하나를 그대로 같이 씁니다.
+프런트엔드(`src/api/weather.js`)는 이제 OpenWeatherMap을 직접 호출하지 않고 `/api/weather`만
+호출하며, 실제 키(`OPENWEATHER_API_KEY`, `VITE_` 접두사 없음)는 서버에만 존재합니다.
+(자외선 지수를 가져오는 Open-Meteo는 키가 필요 없는 공개 API라 그대로 프런트에서 직접 호출)
+> 💡 **느낀점/배운점**: "어차피 브라우저에서 다 보이니 상관없다"고 넘어갔던 걸 결국 나중에 다시
+> 손보게 됐습니다. 처음부터 "이 키가 진짜 숨겨져야 하는가"를 정해두고 시작했다면 두 번 일하지
+> 않았을 것 같습니다. 그리고 Vercel의 Secret/Config 에러 메시지처럼, 플랫폼이 주는 에러가
+> 오히려 설계상 놓친 부분을 짚어줄 때가 있다는 것도 느꼈습니다. 마지막으로, 프록시 로직이
+> Express(req.query/res.json)와 Vercel Node 함수(req.query/res.status().json())에서 거의
+> 동일하게 동작한다는 걸 알고 나니, 두 곳에 로직을 중복해서 짜기보다 공용 핸들러 하나로
+> 합치는 게 훨씬 유지보수하기 편하다는 것도 배웠습니다.

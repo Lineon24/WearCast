@@ -2,6 +2,7 @@ import { config } from 'dotenv'
 import express from 'express'
 import cors from 'cors'
 import OpenAI from 'openai'
+import { handleWeatherProxy } from '../api/_lib/weatherProxy.js'
 
 // Vite 관례를 따라 .env.local을 사용하므로(기본 dotenv는 .env만 읽음) 명시적으로 지정
 config({ path: '.env.local' })
@@ -16,6 +17,9 @@ const client = API_KEY ? new OpenAI({ apiKey: API_KEY }) : null
 const app = express()
 app.use(cors())
 app.use(express.json({ limit: '1mb' }))
+
+// 날씨/대기질/예보/지오코딩 - api/weather.js(Vercel 서버리스 함수)와 동일한 핸들러를 그대로 사용
+app.get('/api/weather', handleWeatherProxy)
 
 app.post('/api/chat', async (req, res) => {
     if (!client) {

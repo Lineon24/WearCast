@@ -1,23 +1,22 @@
 import axios from 'axios'
 
-// 🛠️ 트러블슈팅 [v0.0.0]: 이 키가 소스 코드에 그대로 하드코딩돼 있었다 - git에도 그대로 올라가고,
-// 프런트엔드에서 직접 호출하는 구조라 브라우저 네트워크 탭에서도 어차피 보이긴 하지만,
-// 최소한 소스코드/git 이력에는 안 남도록 .env.local로 옮겼다.
-// (완전히 숨기려면 챗봇 키처럼 백엔드 프록시를 거치게 해야 하는데, 이 프로젝트에선
-// 여러 화면에서 직접 호출하는 구조라 일단 여기까지만 정리함)
-const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
-const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather'
-const AIR_POLLUTION_URL = 'https://api.openweathermap.org/data/2.5/air_pollution'
-const FORECAST_URL = 'https://api.openweathermap.org/data/2.5/forecast'
+// 🛠️ 트러블슈팅 [v0.0.6]: OpenWeatherMap 관련 API(현재 날씨/대기질/예보/지오코딩)는 원래
+// 여기서 axios로 OpenWeatherMap을 직접 호출하면서 VITE_ 접두사가 붙은 키를 그대로 썼는데,
+// VITE_ 접두사는 Vite가 빌드 시 브라우저 번들에 그대로 넣는 "공개용" 값이라 키가 그대로 노출됐다.
+// 챗봇(api/chat.js)과 동일하게 백엔드 프록시(api/weather.js · server/index.js)를 거치도록 바꿔서,
+// 이제 실제 키(OPENWEATHER_API_KEY, VITE_ 접두사 없음)는 서버에만 존재하고 브라우저에는
+// 전혀 노출되지 않는다.
+const WEATHER_PROXY_URL = '/api/weather'
+
+// Open-Meteo(자외선 지수)는 API 키가 필요 없는 공개 API라 프록시를 거치지 않고 그대로 직접 호출한다
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast'
 
-// 🛠️ 트러블슈팅 [v0.0.3]: 이 두 지오코딩 URL만 http://로 남아있었다(나머지는 전부 https://).
-// 로컬 dev 서버(http://localhost)에서는 페이지 자체가 http라 문제없이 나갔지만, Vercel에
-// https://로 배포하고 나니 "도시 검색으로 지역 추가"와 "내 위치 버튼"(reverseGeocode 호출)이
-// 전부 조용히 실패했다. https 페이지에서 http로 나가는 요청은 브라우저가 mixed content로
-// 판단해 차단하기 때문. http:// → https://로 바꿔서 해결했다.
-const GEO_DIRECT_URL = 'https://api.openweathermap.org/geo/1.0/direct'
-const GEO_REVERSE_URL = 'https://api.openweathermap.org/geo/1.0/reverse'
+// 우리 백엔드 프록시를 호출하는 공통 함수. type으로 어떤 OpenWeatherMap 엔드포인트인지 알려주고
+// 나머지 params는 그대로 전달한다 (appid는 서버에서 붙여서 보냄)
+const fetchFromWeatherProxy = async (type, params) => {
+    const response = await axios.get(WEATHER_PROXY_URL, { params: { type, ...params } })
+    return response.data
+}
 
 // OpenWeatherMap의 영문 날씨 코드를 기존 emojiMap과 맞는 한글로 변환
 const statusMap = {
@@ -40,11 +39,7 @@ const aqiLabelMap = {
 
 // 좌표로 현재 날씨(기온/상태/습도/풍속) 조회
 export const fetchWeatherByCoords = async (lat, lon) => {
-    const response = await axios.get(BASE_URL, {
-        params: { lat, lon, appid: API_KEY, units: 'metric', lang: 'kr' },
-    })
-
-    const data = response.data
+    const data = await fetchFromWeatherProxy('current', { lat, lon, units: 'metric', lang: 'kr' })
     return {
         temp: Math.round(data.main.temp),
         status: statusMap[data.weather[0].main] || data.weather[0].main,
@@ -55,25 +50,19 @@ export const fetchWeatherByCoords = async (lat, lon) => {
 
 // 좌표로 대기질(AQI 등급, PM2.5, PM10) 조회
 export const fetchAirPollution = async (lat, lon) => {
-    const response = await axios.get(AIR_POLLUTION_URL, {
-        params: { lat, lon, appid: API_KEY },
-    })
-
-    const data = response.data.list[0]
+    const data = await fetchFromWeatherProxy('air', { lat, lon })
+    const item = data.list[0]
     return {
-        aqiLabel: aqiLabelMap[data.main.aqi] || '알 수 없음',
-        pm2_5: Math.round(data.components.pm2_5),
-        pm10: Math.round(data.components.pm10),
+        aqiLabel: aqiLabelMap[item.main.aqi] || '알 수 없음',
+        pm2_5: Math.round(item.components.pm2_5),
+        pm10: Math.round(item.components.pm10),
     }
 }
 
 // 좌표로 5일치 3시간 간격 예보 목록 조회 (상세 페이지의 24시간/5일 예보가 여기서 나옴)
 export const fetchForecast = async (lat, lon) => {
-    const response = await axios.get(FORECAST_URL, {
-        params: { lat, lon, appid: API_KEY, units: 'metric', lang: 'kr' },
-    })
-
-    return response.data.list.map((item) => ({
+    const data = await fetchFromWeatherProxy('forecast', { lat, lon, units: 'metric', lang: 'kr' })
+    return data.list.map((item) => ({
         date: item.dt_txt.slice(0, 10),
         time: item.dt_txt.slice(11, 16),
         timestamp: item.dt * 1000,
@@ -129,22 +118,44 @@ export const getCurrentPosition = () => {
     })
 }
 
+// 국가 코드를 한글 국가명으로 변환 (이 앱은 한국 사용자 위주라 KR만 우선 처리하고, 나머지는 코드 그대로 둔다)
+const COUNTRY_LABELS = { KR: '대한민국' }
+
+// 지오코딩 응답에서 "국가 + 시/도 + 지명"을 이어붙여 지역 구분용 라벨을 만든다.
+//
+// 🛠️ 트러블슈팅 [v0.0.5]: 같은 "서울"이어도 기본 제공 카드와 GPS로 추가한 카드의 실제 좌표가
+// 달라 날씨 수치가 다르게 나오는데, 카드에는 name만 보여주고 있어서 사용자 입장에선 왜 다른지
+// 구분할 방법이 없었다. OpenWeatherMap의 역지오코딩(GeoNames 기반)은 한국 주소를 구/동 단위까지
+// 안정적으로 보장하진 않지만(좌표에 따라 "서울"처럼 시 단위로만 잡히기도 하고, "Gangnam-gu"처럼
+// 구 단위로 더 정확하게 잡히기도 함), 응답에 들어있는 국가/시도(state)/지명 정보를 최대한 이어붙여서
+// region으로 노출하면 최소한 있는 정보만큼은 구분에 도움이 된다.
+// (동 단위까지 안정적으로 뽑으려면 카카오/네이버 로컬 API처럼 한국 주소에 특화된 별도 서비스가
+// 필요한데, 이번엔 API 키를 새로 추가하지 않고 기존 정보만으로 개선하는 쪽을 선택함)
+const buildRegionLabel = (place) => {
+    const countryLabel = COUNTRY_LABELS[place.country] || place.country
+    const placeName = place.local_names?.ko || place.name
+    // state와 placeName이 같은 값(예: 둘 다 "Seoul")이면 중복 표기하지 않는다
+    const parts = [countryLabel, place.state, place.state !== placeName ? placeName : null]
+    return parts.filter(Boolean).join(' ')
+}
+
 // 도시 이름 → 좌표 (수동 검색용)
 export const searchCityByName = async (cityName) => {
-    const response = await axios.get(GEO_DIRECT_URL, {
-        params: { q: cityName, limit: 1, appid: API_KEY },
-    })
-    if (!response.data.length) return null
-    const place = response.data[0]
-    return { name: place.local_names?.ko || place.name, lat: place.lat, lon: place.lon }
+    const data = await fetchFromWeatherProxy('geo-direct', { q: cityName, limit: 1 })
+    if (!data.length) return null
+    const place = data[0]
+    return {
+        name: place.local_names?.ko || place.name,
+        lat: place.lat,
+        lon: place.lon,
+        region: buildRegionLabel(place),
+    }
 }
 
 // 좌표 → 도시 이름 (GPS 감지 후 라벨 표시용)
 export const reverseGeocode = async (lat, lon) => {
-    const response = await axios.get(GEO_REVERSE_URL, {
-        params: { lat, lon, limit: 1, appid: API_KEY },
-    })
-    if (!response.data.length) return null
-    const place = response.data[0]
-    return { name: place.local_names?.ko || place.name, lat, lon }
+    const data = await fetchFromWeatherProxy('geo-reverse', { lat, lon, limit: 1 })
+    if (!data.length) return null
+    const place = data[0]
+    return { name: place.local_names?.ko || place.name, lat, lon, region: buildRegionLabel(place) }
 }
