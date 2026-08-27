@@ -25,9 +25,26 @@ const loadRemovedDefaultsFromStorage = () => {
     }
 }
 
-// 위도/경도를 소수점 첫째 자리로 반올림해서 "위치 버킷" 키를 만든다 (약 11km 이내면 같은 지역으로 간주)
-// isDuplicateLocation에서 정확히 같은 좌표가 아니어도 같은 동네면 중복으로 잡기 위해 사용
-const toLocationKey = (lat, lon) => `${lat.toFixed(1)}_${lon.toFixed(1)}`
+// 🛠️ 트러블슈팅 [v0.0.4]: 원래는 위도/경도를 소수점 첫째 자리로 반올림해서 "같은 버킷이면 같은 지역"으로
+// 판단했는데, 반올림 경계값 문제로 오작동했다. 예를 들어 37.549와 37.551은 실거리로 200m도
+// 안 되지만 각각 37.5 / 37.6으로 반올림되어 "다른 지역"으로 오판했다.
+// (내 위치 버튼은 GPS 실측 좌표를, 검색 추가는 지오코딩 DB의 대표 좌표를 쓰다 보니 같은 도시여도
+// 값이 미세하게 달라서 경계를 넘나드는 일이 실제로 발생 → 같은 도시가 중복으로 추가되는 버그였음)
+// 그래서 반올림 버킷 비교 대신, 두 좌표 사이의 실제 거리를 계산해서 비교하도록 고쳤다.
+const EARTH_RADIUS_KM = 6371
+const DUPLICATE_DISTANCE_KM = 5 // 이 거리 이내면 같은 지역으로 간주
+
+const toRad = (deg) => (deg * Math.PI) / 180
+
+// 두 좌표 사이의 실제 거리(km)를 하버사인 공식으로 계산
+const getDistanceKm = (lat1, lon1, lat2, lon2) => {
+    const dLat = toRad(lat2 - lat1)
+    const dLon = toRad(lon2 - lon1)
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+    return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
 
 export const useCustomCitiesStore = defineStore('customCities', () => {
     const cities = ref(loadFromStorage())
@@ -43,16 +60,16 @@ export const useCustomCitiesStore = defineStore('customCities', () => {
 
     // 이미 등록된 지역(기본 제공 + 내가 추가한 지역)과 같은 위치인지 확인
     //
-    // 🛠️ 트러블슈팅: 처음엔 removedDefaultCityIds를 고려하지 않고 weatherMockData 전체와 비교해서,
+    // 🛠️ 트러블슈팅 [v0.0.0]: 처음엔 removedDefaultCityIds를 고려하지 않고 weatherMockData 전체와 비교해서,
     // "삭제한 기본 지역을 다시 검색해서 추가"하면 항상 "이미 등록된 도시"로 막혀버리는 버그가 있었다.
     // (삭제는 목록에서 숨기는 것뿐인데, 중복 체크는 원본 mock 데이터를 그대로 봤던 게 원인)
     // 그래서 아래처럼 삭제된 기본 지역은 먼저 걸러내고 비교하도록 고쳤다.
     const isDuplicateLocation = (lat, lon) => {
-        const key = toLocationKey(lat, lon)
+        const isSameSpot = (item) => getDistanceKm(item.lat, item.lon, lat, lon) <= DUPLICATE_DISTANCE_KM
         const inMock = weatherMockData
             .filter((item) => !removedDefaultCityIds.value.includes(item.id))
-            .some((item) => toLocationKey(item.lat, item.lon) === key)
-        const inCustom = cities.value.some((item) => toLocationKey(item.lat, item.lon) === key)
+            .some(isSameSpot)
+        const inCustom = cities.value.some(isSameSpot)
         return inMock || inCustom
     }
 

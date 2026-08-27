@@ -1,10 +1,12 @@
-// Vercel Node 서버리스 함수는 응답을 스트리밍하지 않고 완료된 뒤 한 번에 내려주므로,
-// 실시간 타이핑 효과를 위해 Edge Runtime을 사용한다 (표준 Request/Response 기반).
+// 🛠️ 트러블슈팅 [v0.0.1]: Vercel Node 서버리스 함수는 응답을 스트리밍하지 않고 완료된 뒤
+// 한 번에 내려주는 걸 배포하고 나서야 알았다 (로컬 Express 프록시는 청크 단위로 바로바로
+// 내려줘서 문제를 못 느꼈음). 실시간 타이핑 효과를 위해 Edge Runtime으로 전환했다
+// (표준 Request/Response 기반이라 ReadableStream을 그대로 스트리밍할 수 있다).
 export const config = { runtime: 'edge' }
 
 const MODEL = 'gpt-4o-mini'
 
-// 🛠️ 트러블슈팅: 원래 openai npm SDK를 그대로 썼는데, Vercel에 배포하니
+// 🛠️ 트러블슈팅 [v0.0.1]: 원래 openai npm SDK를 그대로 썼는데, Vercel에 배포하니
 // "The Edge Function 'api/chat' is referencing unsupported modules: openai: #x509-transport-state"
 // 에러가 났다. openai SDK가 내부적으로 Edge Runtime에서 지원 안 하는 Node 전용 모듈(TLS 관련)을
 // 참조하고 있었던 것. SDK 대신 OpenAI REST API를 fetch로 직접 호출하고, 응답으로 오는

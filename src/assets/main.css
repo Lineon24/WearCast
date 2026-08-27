@@ -20,7 +20,7 @@
 
   --el-font-family: inherit;
   --el-text-color-primary: var(--wx-text);
-  /* 🛠️ 트러블슈팅: --el-text-color-regular를 흐린 회색(--wx-text-soft)으로 뒀더니,
+  /* 🛠️ 트러블슈팅 [v0.0.0]: --el-text-color-regular를 흐린 회색(--wx-text-soft)으로 뒀더니,
      이 변수를 el-input이 "타이핑한 글자 색"으로도 그대로 쓰고 있어서 검색창/입력창에
      친 글자가 다 흐릿하게 보이는 버그가 있었다. 진한 색(--wx-text)으로 바꾸고,
      --el-input-text-color도 따로 한 번 더 명시해서 확실히 검은 글자로 보이게 고쳤다. */

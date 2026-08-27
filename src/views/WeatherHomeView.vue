@@ -101,7 +101,7 @@ const handleSearchQuery = (value) => {
   searchQuery.value = value
 }
 
-// 🛠️ 트러블슈팅: watch의 콜백은 (newValue, oldValue) 순서로 인자를 받는데,
+// 🛠️ 트러블슈팅 [v0.0.0]: watch의 콜백은 (newValue, oldValue) 순서로 인자를 받는데,
 // 예전에 이 순서를 반대로 알고 써서 최신 값이 필요한 곳에서 계속 "이전 값"만 가져오는 버그를 겪었다.
 // (파라미터 이름만 봐서는 잘 안 헷갈릴 것 같아도, 급하게 짤 때 순서를 뒤집어 쓰기 쉬움)
 // 그 뒤로는 watch를 쓸 때마다 콜백 시그니처가 (newValue, oldValue) 순서인지 한 번씩 확인하는 습관을 들임.

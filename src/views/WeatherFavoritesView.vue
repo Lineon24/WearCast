@@ -18,7 +18,7 @@ const isLoading = ref(false)
 
 // 즐겨찾기로 등록된 지역들의 실시간 날씨를 불러온다
 //
-// 🛠️ 트러블슈팅: 원래는 weatherMockData(기본 지역)만 보고 즐겨찾기 대상을 걸러서,
+// 🛠️ 트러블슈팅 [v0.0.0]: 원래는 weatherMockData(기본 지역)만 보고 즐겨찾기 대상을 걸러서,
 // 내가 검색으로 추가한 지역을 즐겨찾기해도 이 페이지에는 안 뜨는 버그가 있었다.
 // customCitiesStore.cities도 같이 합쳐서 걸러주도록 고쳤다. (지역 삭제 시 숨김 처리되는
 // removedDefaultCityIds도 같이 빼줘야 지운 지역이 여기 남아있지 않는다)

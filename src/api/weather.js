@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-// 🛠️ 트러블슈팅: 이 키가 소스 코드에 그대로 하드코딩돼 있었다 - git에도 그대로 올라가고,
+// 🛠️ 트러블슈팅 [v0.0.0]: 이 키가 소스 코드에 그대로 하드코딩돼 있었다 - git에도 그대로 올라가고,
 // 프런트엔드에서 직접 호출하는 구조라 브라우저 네트워크 탭에서도 어차피 보이긴 하지만,
 // 최소한 소스코드/git 이력에는 안 남도록 .env.local로 옮겼다.
 // (완전히 숨기려면 챗봇 키처럼 백엔드 프록시를 거치게 해야 하는데, 이 프로젝트에선
@@ -10,6 +10,12 @@ const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather'
 const AIR_POLLUTION_URL = 'https://api.openweathermap.org/data/2.5/air_pollution'
 const FORECAST_URL = 'https://api.openweathermap.org/data/2.5/forecast'
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast'
+
+// 🛠️ 트러블슈팅 [v0.0.3]: 이 두 지오코딩 URL만 http://로 남아있었다(나머지는 전부 https://).
+// 로컬 dev 서버(http://localhost)에서는 페이지 자체가 http라 문제없이 나갔지만, Vercel에
+// https://로 배포하고 나니 "도시 검색으로 지역 추가"와 "내 위치 버튼"(reverseGeocode 호출)이
+// 전부 조용히 실패했다. https 페이지에서 http로 나가는 요청은 브라우저가 mixed content로
+// 판단해 차단하기 때문. http:// → https://로 바꿔서 해결했다.
 const GEO_DIRECT_URL = 'https://api.openweathermap.org/geo/1.0/direct'
 const GEO_REVERSE_URL = 'https://api.openweathermap.org/geo/1.0/reverse'
 
