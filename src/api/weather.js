@@ -37,11 +37,15 @@ const aqiLabelMap = {
     5: '매우 나쁨',
 }
 
-// 좌표로 현재 날씨(기온/상태/습도/풍속) 조회
+// 좌표로 현재 날씨(기온/체감온도/상태/습도/풍속) 조회
+//
+// 🛠️ 트러블슈팅 [v0.0.11]: feels_like(체감온도) 필드를 새로 추가하고,
+// temp/feelsLike 반올림을 정수에서 소수점 첫째 자리까지로 변경.
 export const fetchWeatherByCoords = async (lat, lon) => {
     const data = await fetchFromWeatherProxy('current', { lat, lon, units: 'metric', lang: 'kr' })
     return {
-        temp: Math.round(data.main.temp),
+        temp: Math.round(data.main.temp * 10) / 10,
+        feelsLike: Math.round(data.main.feels_like * 10) / 10,
         status: statusMap[data.weather[0].main] || data.weather[0].main,
         humidity: data.main.humidity,
         windSpeed: data.wind.speed,
@@ -60,18 +64,25 @@ export const fetchAirPollution = async (lat, lon) => {
 }
 
 // 좌표로 5일치 3시간 간격 예보 목록 조회 (상세 페이지의 24시간/5일 예보가 여기서 나옴)
+//
+// 🛠️ 트러블슈팅 [v0.0.10]: date/time을 dt_txt(UTC 문자열) slice 대신,
+// dt(UTC epoch)로 Date를 만들어 로컬(한국) 시간 기준으로 계산하도록 변경.
 export const fetchForecast = async (lat, lon) => {
     const data = await fetchFromWeatherProxy('forecast', { lat, lon, units: 'metric', lang: 'kr' })
-    return data.list.map((item) => ({
-        date: item.dt_txt.slice(0, 10),
-        time: item.dt_txt.slice(11, 16),
-        timestamp: item.dt * 1000,
-        temp: Math.round(item.main.temp),
-        status: statusMap[item.weather[0].main] || item.weather[0].main,
-        pop: Math.round(item.pop * 100),
-        // 3시간 동안의 강수량(비+눈, mm) - 없으면 0
-        rainAmount: Math.round(((item.rain?.['3h'] ?? 0) + (item.snow?.['3h'] ?? 0)) * 10) / 10,
-    }))
+    const pad = (n) => String(n).padStart(2, '0')
+    return data.list.map((item) => {
+        const local = new Date(item.dt * 1000)
+        return {
+            date: `${local.getFullYear()}-${pad(local.getMonth() + 1)}-${pad(local.getDate())}`,
+            time: `${pad(local.getHours())}:${pad(local.getMinutes())}`,
+            timestamp: item.dt * 1000,
+            temp: Math.round(item.main.temp * 10) / 10,
+            status: statusMap[item.weather[0].main] || item.weather[0].main,
+            pop: Math.round(item.pop * 100),
+            // 3시간 동안의 강수량(비+눈, mm) - 없으면 0
+            rainAmount: Math.round(((item.rain?.['3h'] ?? 0) + (item.snow?.['3h'] ?? 0)) * 10) / 10,
+        }
+    })
 }
 
 // Open-Meteo에서 시간대별 자외선 지수 예보를 통째로 가져온다 (OpenWeatherMap엔 UV가 없어서 다른 API를 씀)

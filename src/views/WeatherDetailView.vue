@@ -88,9 +88,18 @@ const displayTemp = computed(() => {
     if (!city.value) return null
     const rawTemp = city.value.temp
     if (configStore.unit === 'fahrenheit') {
-        return Math.round((rawTemp * 9) / 5 + 32)
+        return Math.round(((rawTemp * 9) / 5 + 32) * 10) / 10
     }
     return rawTemp
+})
+
+const displayFeelsLike = computed(() => {
+    if (!city.value) return null
+    const rawFeelsLike = city.value.feelsLike
+    if (configStore.unit === 'fahrenheit') {
+        return Math.round(((rawFeelsLike * 9) / 5 + 32) * 10) / 10
+    }
+    return rawFeelsLike
 })
 
 const goHome = () => {
@@ -155,8 +164,9 @@ const dailyForecast = computed(() => {
                 <div class="hero-icon" :class="`is-${city.status === '맑음' ? 'sunny' : city.status === '비' ? 'rainy' : 'cloudy'}`">
                     {{ getEmoji(city.status) }}
                 </div>
-                <div class="hero-temp">{{ displayTemp }}{{ configStore.unitSymbol }}</div>
+                <div class="hero-temp">{{ displayTemp.toFixed(1) }}{{ configStore.unitSymbol }}</div>
                 <div class="hero-status">지금은 {{ city.status }}</div>
+                <div class="hero-feels">체감 {{ displayFeelsLike.toFixed(1) }}{{ configStore.unitSymbol }}</div>
             </div>
 
             <div class="stat-grid">
@@ -222,7 +232,7 @@ const dailyForecast = computed(() => {
                     <div v-for="item in hourlyForecast" :key="item.time" class="forecast-item">
                         <div class="forecast-time">{{ item.time }}</div>
                         <div class="forecast-emoji">{{ getEmoji(item.status) }}</div>
-                        <div class="forecast-temp">{{ item.temp }}°</div>
+                        <div class="forecast-temp">{{ item.temp.toFixed(1) }}°</div>
                         <div class="forecast-sub">☔ {{ item.pop }}%</div>
                         <div class="forecast-sub">💧 {{ item.rainAmount }}mm</div>
                         <div class="forecast-sub">🧴 UV {{ item.uv }}</div>
@@ -235,7 +245,7 @@ const dailyForecast = computed(() => {
                     <div v-for="day in dailyForecast" :key="day.date" class="forecast-item">
                         <div class="forecast-time">{{ formatWeekday(day.date) }}요일</div>
                         <div class="forecast-emoji">{{ getEmoji(day.status) }}</div>
-                        <div class="forecast-temp">{{ day.maxTemp }}° / {{ day.minTemp }}°</div>
+                        <div class="forecast-temp">{{ day.maxTemp.toFixed(1) }}° / {{ day.minTemp.toFixed(1) }}°</div>
                         <div class="forecast-sub">☔ {{ day.maxPop }}%</div>
                         <div class="forecast-sub">💧 {{ day.totalRain }}mm</div>
                         <div class="forecast-sub">🧴 UV {{ day.maxUv }}</div>
@@ -287,6 +297,7 @@ const dailyForecast = computed(() => {
 }
 .hero-temp { font-size: 44px; font-weight: 800; line-height: 1; }
 .hero-status { font-size: 13px; opacity: 0.85; margin-top: 6px; }
+.hero-feels { font-size: 12px; opacity: 0.7; margin-top: 2px; }
 
 .stat-grid {
     display: grid;

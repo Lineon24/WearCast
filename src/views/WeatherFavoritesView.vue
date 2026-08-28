@@ -70,9 +70,17 @@ const goDetail = (cityId) => {
 const displayTemp = (city) => {
     const rawTemp = city.temp
     if (configStore.unit === 'fahrenheit') {
-        return Math.round((rawTemp * 9) / 5 + 32)
+        return Math.round(((rawTemp * 9) / 5 + 32) * 10) / 10
     }
     return rawTemp
+}
+
+const displayFeelsLike = (city) => {
+    const rawFeelsLike = city.feelsLike
+    if (configStore.unit === 'fahrenheit') {
+        return Math.round(((rawFeelsLike * 9) / 5 + 32) * 10) / 10
+    }
+    return rawFeelsLike
 }
 </script>
 
@@ -97,7 +105,8 @@ const displayTemp = (city) => {
                 </div>
                 <div class="fav-name">{{ city.name }}</div>
                 <div class="fav-status">{{ city.status }}</div>
-                <div class="fav-temp">{{ displayTemp(city) }}{{ configStore.unitSymbol }}</div>
+                <div class="fav-temp">{{ displayTemp(city).toFixed(1) }}{{ configStore.unitSymbol }}</div>
+                <div class="fav-feels">체감 {{ displayFeelsLike(city).toFixed(1) }}{{ configStore.unitSymbol }}</div>
             </div>
         </div>
 
@@ -170,6 +179,7 @@ const displayTemp = (city) => {
 .fav-name { font-size: 14px; font-weight: 800; color: var(--wx-text); }
 .fav-status { font-size: 11.5px; color: var(--wx-text-soft); margin: 2px 0 8px; }
 .fav-temp { font-size: 20px; font-weight: 800; color: var(--wx-text); }
+.fav-feels { font-size: 11px; color: var(--wx-text-faint); margin-top: 2px; }
 
 .fav-empty {
     background: var(--wx-surface);

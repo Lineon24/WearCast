@@ -23,9 +23,17 @@ const getTone = (weatherStatus) => toneMap[weatherStatus] || 'is-cloudy'
 const displayTemp = computed(() => {
     const rawTemp = props.city.temp // 기본 원본 데이터는 섭씨 숫자
     if (configStore.unit === 'fahrenheit') {
-        return Math.round((rawTemp * 9) / 5 + 32)
+        return Math.round(((rawTemp * 9) / 5 + 32) * 10) / 10
     }
     return rawTemp
+})
+
+const displayFeelsLike = computed(() => {
+    const rawFeelsLike = props.city.feelsLike
+    if (configStore.unit === 'fahrenheit') {
+        return Math.round(((rawFeelsLike * 9) / 5 + 32) * 10) / 10
+    }
+    return rawFeelsLike
 })
 </script>
 
@@ -47,7 +55,8 @@ const displayTemp = computed(() => {
                 <!-- 이름만 같고 좌표가 다른 카드(예: 기본 "서울" vs 내 위치로 추가한 "서울")를
                      구분할 수 있도록 지역 정보를 작게 함께 표시한다 -->
                 <div v-if="city.region && city.region !== city.name" class="region-line">{{ city.region }}</div>
-                <div class="temp-line">{{ displayTemp }}{{ configStore.unitSymbol }}</div>
+                <div class="temp-line">{{ displayTemp.toFixed(1) }}{{ configStore.unitSymbol }}</div>
+                <div class="feels-line">체감 {{ displayFeelsLike.toFixed(1) }}{{ configStore.unitSymbol }}</div>
                 <el-tag v-if="city.temp >= 25" type="danger" round effect="light" size="small">🔥 더움</el-tag>
                 <el-tag v-else type="primary" round effect="light" size="small">❄️ 선선함</el-tag>
             </div>
@@ -133,7 +142,8 @@ const displayTemp = computed(() => {
     white-space: nowrap;
     margin-top: 1px;
 }
-.temp-line { font-size: 14px; font-weight: 700; color: var(--wx-text); margin: 2px 0 6px; }
+.temp-line { font-size: 14px; font-weight: 700; color: var(--wx-text); margin: 2px 0 0; }
+.feels-line { font-size: 11px; color: var(--wx-text-faint); margin: 0 0 6px; }
 
 .fav-star { color: var(--wx-text-faint); font-size: 13px; }
 .fav-star.active { color: var(--wx-warm); }
