@@ -124,6 +124,17 @@ const hourlyForecast = computed(() =>
     }))
 )
 
+// 돌풍 주의 기준: 8m/s(보퍼트 풍력계급 5 - "우산 사용이 어려워짐" 단계).
+// 지금 이 순간뿐 아니라 24시간 예보 구간까지 훑어서, 오늘 안에 돌풍이 예보돼 있으면 미리 알려준다.
+const GUST_WARNING_SPEED = 8
+const maxGustNext24h = computed(() => {
+    const gusts = [city.value?.windGust, ...hourlyForecast.value.map((item) => item.windGust)].filter(
+        (g) => g != null
+    )
+    return gusts.length ? Math.max(...gusts) : null
+})
+const showGustAlert = computed(() => (maxGustNext24h.value ?? 0) >= GUST_WARNING_SPEED)
+
 // 날짜별로 묶어서 하루 최저/최고/대표날씨 + 최대 강수확률/UV 계산
 const dailyForecast = computed(() => {
     const grouped = {}
@@ -179,6 +190,7 @@ const dailyForecast = computed(() => {
                     <el-icon><WindPower /></el-icon>
                     <div class="stat-label">풍속</div>
                     <div class="stat-value">{{ city.windSpeed }}m/s</div>
+                    <div v-if="city.windGust" class="stat-sub">돌풍 {{ city.windGust }}m/s</div>
                 </div>
                 <div class="stat-box" v-if="dailyForecast[0]">
                     <el-icon><Umbrella /></el-icon>
@@ -190,7 +202,37 @@ const dailyForecast = computed(() => {
                     <div class="stat-label">공기질</div>
                     <div class="stat-value">{{ airQuality.aqiLabel }}</div>
                 </div>
+                <div class="stat-box">
+                    <el-icon><Cloudy /></el-icon>
+                    <div class="stat-label">구름량</div>
+                    <div class="stat-value">{{ city.clouds }}%</div>
+                </div>
+                <div class="stat-box">
+                    <el-icon><DataLine /></el-icon>
+                    <div class="stat-label">기압</div>
+                    <div class="stat-value">{{ city.pressure }}hPa</div>
+                </div>
+                <div class="stat-box">
+                    <el-icon><View /></el-icon>
+                    <div class="stat-label">가시거리</div>
+                    <div class="stat-value">{{ city.visibility }}km</div>
+                </div>
+                <div class="stat-box">
+                    <el-icon><Sunrise /></el-icon>
+                    <div class="stat-label">일출 · 일몰</div>
+                    <div class="stat-value">{{ city.sunrise }} · {{ city.sunset }}</div>
+                </div>
             </div>
+
+            <el-alert
+                v-if="showGustAlert"
+                :title="`돌풍 주의 - 오늘 순간 최고 ${maxGustNext24h}m/s. 우산이 뒤집힐 수 있어요!`"
+                type="warning"
+                :closable="false"
+                center
+                show-icon
+                class="gust-alert"
+            />
 
             <BaseDashboardCard v-if="uvIndex !== null" icon="Sunny" title="자외선 / 강수확률">
                 <div class="gauge-row">
@@ -235,6 +277,7 @@ const dailyForecast = computed(() => {
                         <div class="forecast-temp">{{ item.temp.toFixed(1) }}°</div>
                         <div class="forecast-sub">☔ {{ item.pop }}%</div>
                         <div class="forecast-sub">💧 {{ item.rainAmount }}mm</div>
+                        <div class="forecast-sub">☁️ {{ item.clouds }}%</div>
                         <div class="forecast-sub">🧴 UV {{ item.uv }}</div>
                     </div>
                 </div>
@@ -315,6 +358,9 @@ const dailyForecast = computed(() => {
 .stat-box .el-icon { font-size: 18px; color: var(--wx-primary); margin-bottom: 4px; }
 .stat-label { font-size: 11px; color: var(--wx-text-soft); margin-bottom: 2px; }
 .stat-value { font-size: 14.5px; font-weight: 800; color: var(--wx-text); }
+.stat-sub { font-size: 10.5px; color: var(--wx-warm); font-weight: 600; margin-top: 2px; }
+
+.gust-alert { margin-bottom: 16px; border-radius: var(--wx-radius-sm); }
 
 .empty-card {
     background: var(--wx-surface);

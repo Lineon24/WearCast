@@ -97,10 +97,17 @@ const loadWeatherData = async (city) => {
 
         const grouped = {}
         forecastList.forEach((item) => {
-            if (!grouped[item.date]) grouped[item.date] = { temps: [], statuses: [], pops: [], uvs: [] }
+            if (!grouped[item.date]) {
+                grouped[item.date] = { temps: [], feelsLikes: [], statuses: [], pops: [], uvs: [], humidities: [], windSpeeds: [], windGusts: [], rains: [] }
+            }
             grouped[item.date].temps.push(item.temp)
+            grouped[item.date].feelsLikes.push(item.feelsLike)
             grouped[item.date].statuses.push(item.status)
             grouped[item.date].pops.push(item.pop)
+            grouped[item.date].humidities.push(item.humidity)
+            grouped[item.date].windSpeeds.push(item.windSpeed)
+            if (item.windGust != null) grouped[item.date].windGusts.push(item.windGust)
+            grouped[item.date].rains.push(item.rainAmount ?? 0)
             if (hourlyUvData) grouped[item.date].uvs.push(findUvAtTime(hourlyUvData, item.timestamp))
         })
         const getMostFrequent = (arr) => {
@@ -112,9 +119,15 @@ const loadWeatherData = async (city) => {
             date,
             minTemp: Math.min(...info.temps),
             maxTemp: Math.max(...info.temps),
+            minFeelsLike: Math.min(...info.feelsLikes),
+            maxFeelsLike: Math.max(...info.feelsLikes),
             status: getMostFrequent(info.statuses),
             maxPop: Math.max(...info.pops),
             maxUv: info.uvs.length ? Math.max(...info.uvs) : null,
+            avgHumidity: Math.round(info.humidities.reduce((sum, v) => sum + v, 0) / info.humidities.length),
+            maxWindSpeed: Math.max(...info.windSpeeds),
+            maxWindGust: info.windGusts.length ? Math.max(...info.windGusts) : null,
+            totalRain: Math.round(info.rains.reduce((sum, v) => sum + v, 0) * 10) / 10,
         }))
 
         weatherData.value = { current, hourlyForecast, dailyForecast, uvIndex: uv, hourlyUv: hourlyUvData, airQuality }

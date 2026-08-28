@@ -37,18 +37,32 @@ const aqiLabelMap = {
     5: '매우 나쁨',
 }
 
-// 좌표로 현재 날씨(기온/체감온도/상태/습도/풍속) 조회
+// 좌표로 현재 날씨(기온/체감온도/상태/습도/풍속/구름량/기압/가시거리/일출·일몰) 조회
 //
 // 🛠️ 트러블슈팅 [v0.0.11]: feels_like(체감온도) 필드를 새로 추가하고,
 // temp/feelsLike 반올림을 정수에서 소수점 첫째 자리까지로 변경.
+// 🛠️ 트러블슈팅 [v0.0.12]: OpenWeatherMap 응답에 이미 들어있던 구름량/기압/가시거리/
+// 일출·일몰 시각/돌풍(windGust)을 안 쓰고 있었다. 옷차림/외출 조언에 참고할 만한 값들이라 추가.
+// (돌풍은 바람이 잔잔하면 wind.gust 필드 자체가 응답에 안 오는 경우가 많아서 없으면 null로 처리)
 export const fetchWeatherByCoords = async (lat, lon) => {
     const data = await fetchFromWeatherProxy('current', { lat, lon, units: 'metric', lang: 'kr' })
+    const pad = (n) => String(n).padStart(2, '0')
+    const formatLocalTime = (unixSeconds) => {
+        const d = new Date(unixSeconds * 1000)
+        return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+    }
     return {
         temp: Math.round(data.main.temp * 10) / 10,
         feelsLike: Math.round(data.main.feels_like * 10) / 10,
         status: statusMap[data.weather[0].main] || data.weather[0].main,
         humidity: data.main.humidity,
         windSpeed: data.wind.speed,
+        windGust: data.wind.gust ?? null,
+        clouds: data.clouds.all,
+        pressure: data.main.pressure,
+        visibility: Math.round((data.visibility / 1000) * 10) / 10,
+        sunrise: formatLocalTime(data.sys.sunrise),
+        sunset: formatLocalTime(data.sys.sunset),
     }
 }
 
@@ -63,10 +77,12 @@ export const fetchAirPollution = async (lat, lon) => {
     }
 }
 
-// 좌표로 5일치 3시간 간격 예보 목록 조회 (상세 페이지의 24시간/5일 예보가 여기서 나옴)
+// 좌표로 5일치 3시간 간격 예보 목록 조회 (상세 페이지의 24시간/5일 예보 + 챗봇 프롬프트가 여기서 나옴)
 //
 // 🛠️ 트러블슈팅 [v0.0.10]: date/time을 dt_txt(UTC 문자열) slice 대신,
 // dt(UTC epoch)로 Date를 만들어 로컬(한국) 시간 기준으로 계산하도록 변경.
+// 🛠️ 트러블슈팅 [v0.0.12]: feelsLike/humidity/windSpeed/clouds/dewPoint/windGust 필드 추가
+// (챗봇이 예보 시점의 체감온도/습도/풍속/구름량/이슬점/돌풍까지 알 수 있도록).
 export const fetchForecast = async (lat, lon) => {
     const data = await fetchFromWeatherProxy('forecast', { lat, lon, units: 'metric', lang: 'kr' })
     const pad = (n) => String(n).padStart(2, '0')
@@ -77,10 +93,16 @@ export const fetchForecast = async (lat, lon) => {
             time: `${pad(local.getHours())}:${pad(local.getMinutes())}`,
             timestamp: item.dt * 1000,
             temp: Math.round(item.main.temp * 10) / 10,
+            feelsLike: Math.round(item.main.feels_like * 10) / 10,
             status: statusMap[item.weather[0].main] || item.weather[0].main,
+            humidity: item.main.humidity,
+            windSpeed: item.wind.speed,
+            windGust: item.wind.gust ?? null,
             pop: Math.round(item.pop * 100),
             // 3시간 동안의 강수량(비+눈, mm) - 없으면 0
             rainAmount: Math.round(((item.rain?.['3h'] ?? 0) + (item.snow?.['3h'] ?? 0)) * 10) / 10,
+            clouds: item.clouds.all,
+            dewPoint: Math.round(item.main.dew_point * 10) / 10,
         }
     })
 }
