@@ -5,12 +5,37 @@
 
 ## 목차
 
+- [시연 화면](#시연-화면)
 - [주요 기능](#주요-기능)
 - [기술 스택](#기술-스택)
 - [폴더 구조](#폴더-구조)
 - [시작하기](#시작하기)
 - [배포 (Vercel)](#배포-vercel)
 - [버전별 히스토리 & 트러블슈팅](#버전별-히스토리--트러블슈팅)
+
+## 시연 화면
+
+<table>
+  <tr>
+    <th width="33%">메인 화면</th>
+    <th width="33%">상세 보기</th>
+    <th width="33%">지역별 AI 챗봇</th>
+  </tr>
+  <tr>
+    <td valign="top"><a href="docs/images/wearcast-dashboard.png"><img src="docs/images/wearcast-dashboard.png" alt="지역 추가·검색과 용인시, 판교, 서울의 날씨 카드" width="300" /></a></td>
+    <td valign="top"><a href="docs/images/wearcast-weather-detail.png"><img src="docs/images/wearcast-weather-detail.png" alt="용인시의 기온, 습도, 풍속, 자외선 지수와 강수확률 상세 화면" width="300" /></a></td>
+    <td valign="top"><a href="docs/images/wearcast-regional-ai-chat.png"><img src="docs/images/wearcast-regional-ai-chat.png" alt="판교의 실제 날씨 데이터로 반팔과 외투 여부를 묻는 AI 대화" width="300" /></a></td>
+  </tr>
+  <tr>
+    <td valign="top">도시 이름이나 내 위치로 지역을 추가하고, 검색·즐겨찾기로 관심 지역의 기온과 체감온도를 한눈에 확인합니다.</td>
+    <td valign="top">선택 지역의 기온·습도·풍속·공기질과 자외선 지수·강수확률 등 외출에 필요한 정보를 확인합니다.</td>
+    <td valign="top">지역을 선택하면 해당 지역의 날씨 데이터로 질문할 수 있습니다. 시연에서는 판교의 기온과 풍속을 바탕으로 옷차림을 안내합니다.</td>
+  </tr>
+</table>
+
+**지역마다 다른 데이터, 지역에 맞는 AI 답변** — 기온·체감온도·풍속·강수·자외선 등 선택한 지역의 실제 날씨를 AI에 전달합니다. “오늘 반팔 입어도 돼?”, “우산 챙겨야 돼?”처럼 같은 질문도 지역의 상황에 맞게 답하며, 대화 기록도 지역별로 따로 유지합니다.
+
+이미지를 누르면 원본 크기로 볼 수 있습니다. 화면의 날씨 수치는 촬영 당시 데이터입니다.
 
 ## 주요 기능
 
